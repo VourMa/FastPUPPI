@@ -263,6 +263,39 @@ whats = [
         ("Corr",    "L1HGCal$",      ROOT.kAzure+1,   20, 1.3),
         ("CorrEM",  "L1HGCalEM$",    ROOT.kViolet+1,  20, 0.9),
     ]),
+    
+    ('debug-hgcTMVA',[ #TMVA debugging
+        ("Corr",    "L1HGCal$",      ROOT.kAzure+1,   20, 1.3),
+        ("CorrWithPUID",     "L1HGCalWithPUID$",   ROOT.kGreen+2,   21, 1.5),
+        ("CorrWithPionID",   "L1HGCalWithPionID$", ROOT.kRed+1,     21, 1.5),
+        ("CorrWithPUPionID",   "L1HGCalWithPUPionID$", ROOT.kBlack,     21, 1.5),
+    ]),
+    ('pfdebugTMVA_OnlyPF',[ #TMVA debugging
+        ("Gen #times Acc", "GenAcc$",           ROOT.kGray+1,  21, 1.2),
+        ("PF",         "L1PF$",                 ROOT.kBlack,    20, 1.0),
+        ("PF_WithPUID",       "L1PFWithPUID$",           ROOT.kGreen+0,  20, 1.2),
+        ("PF_WithPionID",       "L1PFWithPionID$",           ROOT.kRed-4,  20, 1.2),
+        ("PF_WithPUPionID",       "L1PFWithPUPionID$",           ROOT.kViolet-4,  20, 1.2),
+    ]),
+    ('pfdebugTMVA_WithPUID',[ #TMVA debugging
+        ("Gen #times Acc", "GenAcc$",           ROOT.kGray+1,  21, 1.2),
+        ("PF",         "L1PF$",                 ROOT.kBlack,    20, 1.0),
+        ("Puppi",  "L1Puppi$",         ROOT.kAzure+2,  21, 1.5),
+        ("PF_WithPUID",       "L1PFWithPUID$",           ROOT.kGreen+0,  20, 1.2),
+        ("Puppi_WithPUID",  "L1PuppiWithPUID$",         ROOT.kGreen+2,  21, 1.5),
+        ("PF_WithPUPionID",       "L1PFWithPUPionID$",           ROOT.kViolet-4,  20, 1.2),
+        ("Puppi_WithPUPionID",  "L1PuppiWithPUPionID$",         ROOT.kViolet+2,  21, 1.5),
+    ]),
+    ('pfdebugTMVA_WithID',[ #TMVA debugging
+        ("Gen #times Acc", "GenAcc$",           ROOT.kGray+1,  21, 1.2),
+        ("PF",         "L1PF$",                 ROOT.kBlack,    20, 1.0),
+        ("Puppi",  "L1Puppi$",         ROOT.kAzure+2,  21, 1.5),
+        ("PF_WithPionID",       "L1PFWithPionID$",           ROOT.kRed-4,  20, 1.2),
+        ("Puppi_WithPionID",  "L1PuppiWithPionID$",          ROOT.kRed+2,  21, 1.5),
+        ("PF_WithPUPionID",       "L1PFWithPUPionID$",           ROOT.kViolet-4,  20, 1.2),
+        ("Puppi_WithPUPionID",  "L1PuppiWithPUPionID$",         ROOT.kViolet+2,  21, 1.5),
+    ]),
+    
     ('l1pfold',[
         ("Gen #times Acc",        "GenAcc$",    ROOT.kGray+1,  20, 1.2),
         ("Raw Ecal",   "L1OldRawEcal$", ROOT.kGreen+3,  21, 1.7),

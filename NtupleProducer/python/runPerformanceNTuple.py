@@ -8,8 +8,8 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200))
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring('file:/eos/cms/store/cmst3/user/gpetrucc/l1tr/105X/NewInputs104X/010319/TTbar_PU200/inputs104X_TTbar_PU200_job1.root'),
@@ -89,9 +89,30 @@ def monitorPerf(label, tag, makeResp=True, makeRespSplit=True, makeJets=True, ma
             _add('met'+label+'Barrel', pfMet.clone(src = 'barrel'+label, calculateSignificance = False))
             setattr(process.l1pfmetBarrelTable.mets, label, cms.InputTag('met'+label+'Barrel'))
 
+
+particle = "else" # Could be "photon" or "pion" or "else"
+if "photon" in particle :
+    process.genSelection = cms.EDFilter("GenParticleSelector",
+        src = cms.InputTag("genParticles"),
+        cut = cms.string("status() == 1 && abs(pdgId()) == 22 && isPromptFinalState()"),
+        filter = cms.bool(True),
+    )
+elif "pion" in particle :
+    process.genSelection = cms.EDFilter("GenParticleSelector",
+        src = cms.InputTag("genParticles"),
+        cut = cms.string("status() == 1 && abs(pdgId()) == 211 && isPromptFinalState()"),
+        filter = cms.bool(True),
+    )
+else:
+    process.genSelection = cms.EDFilter("GenParticleSelector",
+        src = cms.InputTag("genParticles"),
+        cut = cms.string(""),
+        filter = cms.bool(True),
+    )
+
 process.ntuple = cms.EDAnalyzer("ResponseNTuplizer",
     genJets = cms.InputTag("ak4GenJetsNoNu"),
-    genParticles = cms.InputTag("genParticles"),
+    genParticles = cms.InputTag("genSelection"),
     isParticleGun = cms.bool(False),
     doRandom = cms.bool(False),
     objects = cms.PSet(
@@ -134,6 +155,7 @@ monitorPerf("L1Puppi", "l1pfCandidates:Puppi")
 
 process.runPF.associate(process.extraPFStuff)
 process.p = cms.Path(
+        process.genSelection +
         process.runPF + 
         process.ntuple + 
         process.l1pfjetTable + 
@@ -166,7 +188,7 @@ if True:
     process.ntuple.objects.PhGenAcc = cms.VInputTag(cms.InputTag("genInAcceptance"))
     process.ntuple.objects.PhGenAcc_sel = cms.string("pdgId == 22")
     process.extraPFStuff.add(process.genInAcceptance)
-if False: # test also PF leptons
+if True: # test also PF leptons
     process.ntuple.objects.L1PFMuon = cms.VInputTag("l1pfCandidates:PF",)
     process.ntuple.objects.L1PFMuon_sel = cms.string("abs(pdgId) == 13")
     process.ntuple.objects.L1PFElectron = cms.VInputTag("l1pfCandidates:PF",)
@@ -266,4 +288,147 @@ def goOld():
     process.pfClustersFromHGC3DClusters.corrector =  "L1Trigger/Phase2L1ParticleFlow/data/hadcorr_HGCal3D_STC_93X.root"
     process.pfClustersFromCombinedCaloHCal.hadCorrector =  "L1Trigger/Phase2L1ParticleFlow/data/hadcorr_barrel_93X.root"
     process.pfClustersFromCombinedCaloHF.hadCorrector =  "L1Trigger/Phase2L1ParticleFlow/data/hfcorr_93X.root"
+
+def goSelectHGCClusters():
+    wpPU = -0.02; # could be a function of pt, etc.
+    wpPion = -0.02; # could be a function of pt, etc.
+    
+    ### HGCal Clusters, PU ID Applied
+    process.pfClustersFromHGC3DClustersWithPUID = process.pfClustersFromHGC3DClusters.clone(
+        emVsPUID = cms.PSet(
+            isPUFilter = cms.bool(True),
+            preselection = cms.string(""),
+            method = cms.string("BDT"), # "" to be disabled
+            variables = cms.VPSet(
+                cms.PSet(name = cms.string("eta"), value = cms.string("eta()")),
+                cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+                cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+                cms.PSet(name = cms.string("sigmaPhiPhiTot"), value = cms.string("sigmaPhiPhiTot()")),
+            ),
+            spectators = cms.VPSet( #Dummy variables, they don't participate in the weights but they need to be there
+                cms.PSet(name = cms.string("genpt"), value = cms.string("pt()")),
+                cms.PSet(name = cms.string("genid"), value = cms.string("pdgId()")),
+            ),
+            weightsFile = cms.string("/eos/cms/store/cmst3/user/evourlio/PF_L1_SelectionWeights/PhotonPionVsPU/MVAnalysis_BDT.weights.xml"),
+            wp = cms.string(str(wpPU))
+        )
+    )
+    
+    ### HGCal Clusters, Pion ID Applied
+    process.pfClustersFromHGC3DClustersWithPionID = process.pfClustersFromHGC3DClusters.clone(
+        emVsPionID = cms.PSet(
+            isPUFilter = cms.bool(False),
+            preselection = cms.string(""),
+            method = cms.string("BDT"), # "" to be disabled
+            variables = cms.VPSet(
+                cms.PSet(name = cms.string("eta"), value = cms.string("eta()")),
+                cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+                cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+                cms.PSet(name = cms.string("hOverE"), value = cms.string("hOverE()")),
+                cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
+            ),
+            spectators = cms.VPSet( #Dummy variables, they don't participate in the weights but they need to be there
+                cms.PSet(name = cms.string("genpt"), value = cms.string("pt()")),
+                cms.PSet(name = cms.string("genid"), value = cms.string("pdgId()")),
+            ),
+            weightsFile = cms.string("/eos/cms/store/cmst3/user/evourlio/PF_L1_SelectionWeights/PhotonVsChargedPion/MVAnalysis_BDT.weights.xml"),
+            wp = cms.string(str(wpPion))
+        )
+    )
+    
+    ### HGCal Clusters, PUPion ID Applied
+    process.pfClustersFromHGC3DClustersWithPUPionID = process.pfClustersFromHGC3DClusters.clone(
+        emVsPionID = cms.PSet(
+            isPUFilter = cms.bool(False),
+            preselection = cms.string(""),
+            method = cms.string("BDT"), # "" to be disabled
+            variables = cms.VPSet(
+                cms.PSet(name = cms.string("eta"), value = cms.string("eta()")),
+                cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+                cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+                cms.PSet(name = cms.string("hOverE"), value = cms.string("hOverE()")),
+                cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
+            ),
+            spectators = cms.VPSet( #Dummy variables, they don't participate in the weights but they need to be there
+                cms.PSet(name = cms.string("genpt"), value = cms.string("pt()")),
+                cms.PSet(name = cms.string("genid"), value = cms.string("pdgId()")),
+            ),
+            weightsFile = cms.string("/eos/cms/store/cmst3/user/evourlio/PF_L1_SelectionWeights/PhotonVsChargedPion/MVAnalysis_BDT.weights.xml"),
+            wp = cms.string(str(wpPion))
+        ),
+        emVsPUID = cms.PSet(
+            isPUFilter = cms.bool(True),
+            preselection = cms.string(""),
+            method = cms.string("BDT"), # "" to be disabled
+            variables = cms.VPSet(
+                cms.PSet(name = cms.string("eta"), value = cms.string("eta()")),
+                cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+                cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+                cms.PSet(name = cms.string("sigmaPhiPhiTot"), value = cms.string("sigmaPhiPhiTot()")),
+            ),
+            spectators = cms.VPSet( #Dummy variables, they don't participate in the weights but they need to be there
+                cms.PSet(name = cms.string("genpt"), value = cms.string("pt()")),
+                cms.PSet(name = cms.string("genid"), value = cms.string("pdgId()")),
+            ),
+            weightsFile = cms.string("/eos/cms/store/cmst3/user/evourlio/PF_L1_SelectionWeights/PhotonPionVsPU/MVAnalysis_BDT.weights.xml"),
+            wp = cms.string(str(wpPU))
+        ),
+    )
+    
+    process.extraPFStuff.add(
+        process.pfClustersFromHGC3DClustersWithPUID,
+        process.pfClustersFromHGC3DClustersWithPionID,
+        process.pfClustersFromHGC3DClustersWithPUPionID
+    )
+    
+    monitorPerf("L1HGCal","pfClustersFromHGC3DClusters")
+    monitorPerf("L1HGCalWithPUID","pfClustersFromHGC3DClustersWithPUID")
+    monitorPerf("L1HGCalWithPionID","pfClustersFromHGC3DClustersWithPionID")
+    monitorPerf("L1HGCalWithPUPionID", "pfClustersFromHGC3DClustersWithPUPionID")
+    
+    
+    ### PF Algo, PU ID Applied
+    process.l1pfProducerHGCalWithPUID = process.l1pfProducerHGCal.clone(hadClusters = [ cms.InputTag("pfClustersFromHGC3DClustersWithPUID") ])
+    process.l1pfCandidatesHGCalWithPUID = process.l1pfCandidates.clone(
+        pfProducers = [ "l1pfProducerBarrel", "l1pfProducerHGCalWithPUID", "l1pfProducerHF" ],
+    )
+    process.extraPFStuff.add(process.l1pfProducerHGCalWithPUID,process.l1pfCandidatesHGCalWithPUID)
+    
+    monitorPerf("L1CaloWithPUID", "l1pfCandidatesHGCalWithPUID:Calo", makeRespSplit = False)
+    monitorPerf("L1TKWithPUID", "l1pfCandidatesHGCalWithPUID:TK", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1TKVWithPUID", "l1pfCandidatesHGCalWithPUID:TKVtx", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1PFWithPUID", "l1pfCandidatesHGCalWithPUID:PF")
+    monitorPerf("L1PuppiWithPUID", "l1pfCandidatesHGCalWithPUID:Puppi")
+    
+    
+    ### PF Algo, Pion ID Applied
+    process.l1pfProducerHGCalWithPionID = process.l1pfProducerHGCal.clone(hadClusters = [ cms.InputTag("pfClustersFromHGC3DClustersWithPionID") ])
+    process.l1pfCandidatesHGCalWithPionID = process.l1pfCandidates.clone(
+        pfProducers = [ "l1pfProducerBarrel", "l1pfProducerHGCalWithPionID", "l1pfProducerHF" ],
+    )
+    process.extraPFStuff.add(process.l1pfProducerHGCalWithPionID, process.l1pfCandidatesHGCalWithPionID)
+    
+    monitorPerf("L1CaloWithPionID", "l1pfCandidatesHGCalWithPionID:Calo", makeRespSplit = False)
+    monitorPerf("L1TKWithPionID", "l1pfCandidatesHGCalWithPionID:TK", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1TKVWithPionID", "l1pfCandidatesHGCalWithPionID:TKVtx", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1PFWithPionID", "l1pfCandidatesHGCalWithPionID:PF")
+    monitorPerf("L1PuppiWithPionID", "l1pfCandidatesHGCalWithPionID:Puppi")
+    
+    
+    ### PF Algo, PUPion ID Applied
+    process.l1pfProducerHGCalWithPUPionID = process.l1pfProducerHGCal.clone(hadClusters = [ cms.InputTag("pfClustersFromHGC3DClustersWithPUPionID") ])
+    process.l1pfCandidatesHGCalWithPUPionID = process.l1pfCandidates.clone(
+        pfProducers = [ "l1pfProducerBarrel", "l1pfProducerHGCalWithPUPionID", "l1pfProducerHF" ],
+    )
+    process.extraPFStuff.add(process.l1pfProducerHGCalWithPUPionID, process.l1pfCandidatesHGCalWithPUPionID)
+    
+    monitorPerf("L1CaloWithPUPionID", "l1pfCandidatesHGCalWithPUPionID:Calo", makeRespSplit = False)
+    monitorPerf("L1TKWithPUPionID", "l1pfCandidatesHGCalWithPUPionID:TK", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1TKVWithPUPionID", "l1pfCandidatesHGCalWithPUPionID:TKVtx", makeRespSplit = False, makeJets=False, makeMET=False)
+    monitorPerf("L1PFWithPUPionID", "l1pfCandidatesHGCalWithPUPionID:PF")
+    monitorPerf("L1PuppiWithPUPionID", "l1pfCandidatesHGCalWithPUPionID:Puppi")
+
+goSelectHGCClusters()
+if ("photon" in particle) or ("pion" in particle):
+    goGun(0)
 
