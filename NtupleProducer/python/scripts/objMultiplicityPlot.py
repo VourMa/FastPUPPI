@@ -17,6 +17,7 @@ SAMPLE_LABEL = dict(
     VBFHToBB_PU200 = "VBF H #rightarrow b#bar{b}",
 )
 ALL_SUBDETECTORS = ["Barrel","HF","HGCal","HGCalNoTK"]
+ADD_SUBDETECTORS = []
         
 parser = OptionParser("%(prog) infile [ src [ dst ] ]")
 parser.add_option("--cl", type=float, dest="cl", default=0.95, help="Compute number to avoid truncations at this CL")
@@ -25,6 +26,7 @@ parser.add_option("-d", type="string", dest="detectors", action='append', defaul
 parser.add_option("-s", dest="sample", choices=SAMPLE_LABEL.keys(), default='TTbar_PU200', help="choice of sample: "+", ".join(SAMPLE_LABEL.keys()))
 parser.add_option("--CE", dest="hgcalName", default="HGCal", action="store_const", const="CE", help="Label HGCal as CE in the plots")
 parser.add_option("--HGCAL", dest="hgcalName", default="HGCal", action="store_const", const="HGCAL", help="Label HGCal as HGCAL in the plots")
+parser.add_option("--noPlots", dest="noPlots", default=False, action="store_true", help="Don't print any plots")
 options, args = parser.parse_args()
 
 # flatten in case commas are used
@@ -38,7 +40,9 @@ plotter.canvas.SetLeftMargin(0.20) # bigger margin
 if options.cl >= 1:
     raise RuntimeError("--cl must take an argument stricly between 0 and 1")
 
-detectors = ALL_SUBDETECTORS+["All"]
+for x in options.detectors:
+    if x not in ALL_SUBDETECTORS: ADD_SUBDETECTORS.append(x)
+detectors = ALL_SUBDETECTORS+ADD_SUBDETECTORS+["All"]
 particles = [ "Calo", "EmCalo", "Mu", "TK" ]
 for Algo in "PF", "Puppi":
     particles.append(Algo)
@@ -49,6 +53,7 @@ tfile = ROOT.TFile.Open(args[0])
 tree = tfile.Get("ntuple/tree")
 for detector in detectors:
     if options.detectors and (detector not in options.detectors): continue
+    print; print ">>> "+detector
     detectorLabel = detector
     detectorFull = 'l1pfProducer' + detectorLabel
     detectorLabelPlot = "%s" % detectorLabel
@@ -91,7 +96,7 @@ for detector in detectors:
                 variable = '+'.join("%stotNL1%s" % ('l1pfProducer' + subdetectorLabel, particle) for subdetectorLabel in ALL_SUBDETECTORS)
             else:
                 variable = "%s%sNL1%s"% (detectorFull,x,particle)
-            print "plotting %s" %(variable)
+            if not options.noPlots: print "plotting %s" %(variable)
             if x == "max": # we already have the histogram
                 if ROOT.gROOT.FindObject("htemp2"): ROOT.gROOT.FindObject("htemp2").Delete()
                 h_rebin = ROOT.TH1F("htemp2","htemp2", max_plot_bin+1, -0.5, max_plot_bin+0.5)
@@ -125,4 +130,4 @@ for detector in detectors:
                 plotter.addSpam(0.25, 0.87, SAMPLE_LABEL[options.sample], textSize=0.045)
                 plotter.addSpam(0.25, 0.81, "Min. objects (%.0f%% no trunc.): %i"%(options.cl*100., min_obj), textSize=0.045)
             plotter.decorations()
-            plotter.Print(particle+"_"+detectorLabelFName+"_"+x, exts=["png","pdf","eps","root"])
+            if not options.noPlots: plotter.Print(particle+"_"+detectorLabelFName+"_"+x, exts=["png","pdf","eps","root"])
