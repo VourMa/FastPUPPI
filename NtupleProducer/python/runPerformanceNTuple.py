@@ -7,11 +7,11 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100))
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:inputs110X.root'),
+    fileNames = cms.untracked.vstring('file:/eos/cms/store/cmst3/group/l1tr/gpetrucc/11_1_0/NewInputs110X/150720.done/TTbar_PU200/inputs110X_1.root'),
     inputCommands = cms.untracked.vstring("keep *", 
             "drop l1tPFClusters_*_*_*",
             "drop l1tPFTracks_*_*_*",
@@ -99,9 +99,16 @@ def monitorPerf(label, tag, makeResp=True, makeRespSplit=True, makeJets=True, ma
                 process.ntuple.copyUInts.append( "%s:%sNL1%s%s" % (D,X,P,O))
             process.ntuple.copyVecUInts.append( "%s:vecNL1%s%s" % (D,P,O))
 
+
+process.genSelection = cms.EDFilter("GenParticleSelector",
+    src = cms.InputTag("genParticles"),
+    cut = cms.string(""),
+    filter = cms.bool(True),
+)
+
 process.ntuple = cms.EDAnalyzer("ResponseNTuplizer",
     genJets = cms.InputTag("ak4GenJetsNoNu"),
-    genParticles = cms.InputTag("genParticles"),
+    genParticles = cms.InputTag("genSelection"),
     isParticleGun = cms.bool(False),
     doRandom = cms.bool(False),
     objects = cms.PSet(
@@ -219,6 +226,7 @@ process.runPF.associate(process.extraPFStuff)
 # to check available tags:
 #process.content = cms.EDAnalyzer("EventContentAnalyzer")
 process.p = cms.Path(
+        process.genSelection +
         process.runPF + 
         process.ntuple + #process.content +
         process.l1pfjetTable + 
@@ -640,3 +648,246 @@ def doDumpFile(basename="TTbar_PU200"):
     process.maxEvents.input = 100
 
 
+def selectGenParticles(particle):
+    genSelection = getattr(process, 'genSelection', None)
+    if particle == "photon":
+        genSelection.cut = "status() == 1 && abs(pdgId()) == 22 && isPromptFinalState()"
+    elif particle == "pion":
+        genSelection.cut = "status() == 1 && abs(pdgId()) == 211 && isPromptFinalState()"
+    else: pass
+
+def applyHGCalID(nameID, applyPU, variablesPU, weightsPU, WPPU, applyPion, variablesPion, weightsPion, WPPion):
+    methodPU = ""
+    if applyPU: methodPU = "BDT"
+    methodPion = ""
+    if applyPU: methodPion = "BDT"
+
+    pfClustersFromHGC3DClustersID = process.pfClustersFromHGC3DClusters.clone(
+        emVsPUID = cms.PSet(
+            isPUFilter = cms.bool(True),
+            preselection = cms.string(""),
+            method = cms.string(methodPU), # "" to be disabled
+            variables = variablesPU,
+            weightsFile = cms.string(weightsPU),
+            wp = cms.string(WPPU)
+        ),
+        emVsPionID = cms.PSet(
+            isPUFilter = cms.bool(False),
+            preselection = cms.string(""),
+            method = cms.string(methodPion),
+            variables = variablesPion,
+            weightsFile = cms.string(weightsPion),
+            wp = cms.string(WPPion)
+        ),
+    )
+    setattr(process, 'pfClustersFromHGC3DClusters'+nameID, pfClustersFromHGC3DClustersID)
+
+    l1pfProducerHGCalID = process.l1pfProducerHGCal.clone(hadClusters = [ cms.InputTag("pfClustersFromHGC3DClusters"+nameID) ])
+    l1pfProducerHGCalID.regions = cms.VPSet(
+        cms.PSet(
+            etaBoundaries = cms.vdouble(-2.5, -1.5),
+            etaExtra = cms.double(0.25),
+            phiExtra = cms.double(0.25),
+            phiSlices = cms.uint32(9)
+        ),
+        cms.PSet(
+            etaBoundaries = cms.vdouble(1.5, 2.5),
+            etaExtra = cms.double(0.25),
+            phiExtra = cms.double(0.25),
+            phiSlices = cms.uint32(9)
+        )
+    )
+
+    l1pfProducerHGCalNoTKID = l1pfProducerHGCalID.clone(
+        regions = cms.VPSet(
+            cms.PSet(
+                etaBoundaries = cms.vdouble(-3,-2.5),
+                phiSlices = cms.uint32(1),
+                etaExtra = cms.double(0.3),
+                phiExtra = cms.double(0.0)
+            ),
+            cms.PSet(
+                etaBoundaries = cms.vdouble(2.5,3),
+                phiSlices = cms.uint32(1),
+                etaExtra = cms.double(0.3),
+                phiExtra = cms.double(0.0)
+            ),
+        )
+    )
+    l1pfProducerHGCalNoTKID.regions = cms.VPSet(
+        cms.PSet(
+            etaBoundaries = cms.vdouble(-3, -2.5),
+            etaExtra = cms.double(0.25),
+            phiExtra = cms.double(0.25),
+            phiSlices = cms.uint32(9)
+        ),
+        cms.PSet(
+            etaBoundaries = cms.vdouble(2.5, 3),
+            etaExtra = cms.double(0.25),
+            phiExtra = cms.double(0.25),
+            phiSlices = cms.uint32(9)
+        )
+    )
+    setattr(process, 'l1pfProducerHGCal'+nameID, l1pfProducerHGCalID)
+    setattr(process, 'l1pfProducerHGCalNoTK'+nameID, l1pfProducerHGCalNoTKID)
+
+    l1pfCandidatesHGCalID = process.l1pfCandidates.clone(
+        pfProducers = cms.VInputTag(
+            cms.InputTag("l1pfProducerBarrel"),
+            cms.InputTag("l1pfProducerHGCal"+nameID),
+            cms.InputTag("l1pfProducerHGCalNoTK"+nameID),
+            cms.InputTag("l1pfProducerHF")
+        ),
+    )
+    setattr(process, 'l1pfCandidatesHGCal'+nameID, l1pfCandidatesHGCalID)
+
+    process.extraPFStuff.add(getattr(process,'pfClustersFromHGC3DClusters'+nameID),getattr(process,'l1pfProducerHGCal'+nameID),getattr(process,'l1pfProducerHGCalNoTK'+nameID),getattr(process,'l1pfCandidatesHGCal'+nameID))
+    
+    monitorPerf("L1HGCal"+nameID,"pfClustersFromHGC3DClusters"+nameID)
+    monitorPerf("L1PF"+nameID,"l1pfCandidatesHGCal"+nameID+":PF")
+    monitorPerf("L1Puppi"+nameID,"l1pfCandidatesHGCal"+nameID+":Puppi")
+
+    for D in ['HGCal','HGCalNoTK']:
+        monitorPerf("L1%sCalo"%D+nameID,"l1pfProducer%s"%D+nameID+":Calo", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+           makeCentralMET=False, makeBarrelMET=False, makeInputMultiplicities=True)
+        monitorPerf("L1%sEmCalo"%D+nameID,"l1pfProducer%s"%D+nameID+":EmCalo", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+           makeCentralMET=False, makeBarrelMET=False, makeInputMultiplicities=True)
+        monitorPerf("L1%sTK"%D+nameID,"l1pfProducer%s"%D+nameID+":TK", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+           makeCentralMET=False, makeBarrelMET=False, makeInputMultiplicities=True)
+        monitorPerf("L1%sMu"%D+nameID,"l1pfProducer%s"%D+nameID+":Mu", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+           makeCentralMET=False, makeBarrelMET=False, makeInputMultiplicities=True)
+        monitorPerf("L1%sPF"%D+nameID,"l1pfProducer%s"%D+nameID+":PF", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+               makeCentralMET=False, makeBarrelMET=False, makeOutputMultiplicities=True)
+        monitorPerf("L1%sPuppi"%D+nameID,"l1pfProducer%s"%D+nameID+":Puppi", makeResp=False, makeRespSplit=False, makeJets=False, makeMET=False, 
+               makeCentralMET=False, makeBarrelMET=False, makeOutputMultiplicities=True)
+
+def goSelectHGCClusters():
+    trainDir = "/eos/user/e/evourlio/SWAN_projects/PF_L1_11_1_X_GeomTune/TrainFolders/"
+    # New Train, New variables
+    variablesPU_New = cms.VPSet(
+        cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
+        cms.PSet(name = cms.string("eMaxOverE"), value = cms.string("eMax()/energy()")),
+        cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+        cms.PSet(name = cms.string("sigmaRRTot"), value = cms.string("sigmaRRMean()")),
+        cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+    )
+    weightsPU_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_111X_5var/weights/TMVA_BDT.weights.xml"
+    WPPU_New = "-0.03"
+
+    variablesPion_New = cms.VPSet(
+        cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
+        cms.PSet(name = cms.string("fabs(eta)"), value = cms.string("abs(eta())")),
+        cms.PSet(name = cms.string("showerLength"), value = cms.string("showerLength()")),
+        cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+        cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+    )
+    weightsPion_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_111X_5var/weights/TMVA_BDT.weights.xml"
+    WPPion_New = "0.04"
+
+    # New Train, Old variables
+    variablesPU_Old = cms.VPSet(
+        cms.PSet(name = cms.string("fabs(eta)"), value = cms.string("abs(eta())")),
+        cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+        cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+        cms.PSet(name = cms.string("sigmaPhiPhiTot"), value = cms.string("sigmaPhiPhiTot()")),
+    )
+    weightsPU_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_111X_PrevIDvar/weights/TMVA_BDT.weights.xml"
+    WPPU_NewOld = "-0.03"
+
+    variablesPion_Old = cms.VPSet(
+        cms.PSet(name = cms.string("fabs(eta)"), value = cms.string("abs(eta())")),
+        cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+        cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
+        cms.PSet(name = cms.string("hOverE"), value = cms.string("hOverE()")),
+        cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
+    )
+    weightsPion_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_111X_PrevIDvar/weights/TMVA_BDT.weights.xml"
+    WPPion_NewOld = "0.02"
+
+    # Old Train, Old variables
+    weightsPU_OldOld = "L1Trigger/Phase2L1ParticleFlow/data/hgcal_egID/Photon_Pion_vs_Neutrino_BDTweights.xml.gz"
+    WPPU_OldOld = "-0.02"
+
+    weightsPion_OldOld = "L1Trigger/Phase2L1ParticleFlow/data/hgcal_egID/Photon_vs_Pion_BDTweights.xml.gz"
+    WPPion_OldOld = "0.01"
+
+    # Application
+    applyHGCalID("NoID", False, variablesPU_New, weightsPU_New, WPPU_New, False, variablesPion_New, weightsPion_New, WPPion_New)
+
+    applyHGCalID("WithPUNewID", True, variablesPU_New, weightsPU_New, WPPU_New, False, variablesPion_New, weightsPion_New, WPPion_New)
+    applyHGCalID("WithPionNewID", False, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
+    applyHGCalID("WithPUPionNewID", True, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
+
+    applyHGCalID("WithPUNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, False, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+    applyHGCalID("WithPionNewOldID", False, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+    applyHGCalID("WithPUPionNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+
+    applyHGCalID("WithPUOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+    applyHGCalID("WithPionOldOldID", False, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+    applyHGCalID("WithPUPionOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+
+def addTunePFHGCalSel():
+    def _variant(label, common = {}, barrel = {}, hgcal = {}, hf = {}):
+        tomerge = []
+        for X,D in ("Barrel", barrel), ("HGCalWithPUPionID", hgcal), ("HGCalNoTKWithPUPionID", hgcal), ("HF", hf):
+            src = getattr(process, "l1pfProducer%s" % X)
+            out = src.clone()
+            changed = False
+            for n,v in common.items() + D.items():
+                setattr(out,n,v)
+                changed = True
+            if changed:
+                tomerge.append("l1pfProducer%sTune%s" % (X,label) )
+                setattr(process, tomerge[-1], out)
+                process.extraPFStuff.add( out )
+            else:
+                tomerge.append("l1pfProducer%s" % (X) )
+        merger = process.l1pfCandidates.clone(pfProducers = tomerge)
+        process.extraPFStuff.add( merger )
+        setattr(process, "l1pfCandidatesTune"+label, merger)
+        monitorPerf("L1Tune"+label, "l1pfCandidatesTune"+label+":Puppi")
+
+
+    if True:
+       _variant("HGCPtSlopePhDown", hgcal = dict(puppiPtSlopesPhotons = [0.1,0.1,0.1]))
+       _variant("HGCPtSlopeNeDown", hgcal = dict(puppiPtSlopes = [0.10,0.10,0.1]))
+
+       _variant("HGCPtSlopePh0p4", hgcal = dict(puppiPtSlopesPhotons = [0.40,0.40,0.40]))
+       _variant("HGCPtSlopePh0p6", hgcal = dict(puppiPtSlopesPhotons = [0.60,0.60,0.60]))
+       _variant("HGCPtSlopePh0p9", hgcal = dict(puppiPtSlopesPhotons = [0.90,0.90,0.90]))
+       _variant("HGCPtSlopeNe0p4a0p35", hgcal = dict(puppiPtSlopes = [0.40,0.40,0.35]))
+       _variant("HGCPtSlopeNe0p6a0p4", hgcal = dict(puppiPtSlopes = [0.60,0.60,0.40]))
+       _variant("HGCPtSlopeNe0p9a0p5", hgcal = dict(puppiPtSlopes = [0.90,0.90,0.50]))
+
+    if True:
+       _variant("HGCAlphaSlopePhDown", hgcal = dict(puppiAlphaSlopesPhotons = [0.5,0.5,0.7]))
+       _variant("HGCAlphaSlopeNeDown", hgcal = dict(puppiAlphaSlopes = [0.5,0.5,0.7]))
+
+       _variant("HGCAlphaSlopePh2p0a3p0", hgcal = dict(puppiAlphaSlopesPhotons = [2.0,2.0,3.0]))
+       _variant("HGCAlphaSlopePh3p0a4p5", hgcal = dict(puppiAlphaSlopesPhotons = [3.0,3.0,4.5]))
+       _variant("HGCAlphaSlopePh6p0a8p5", hgcal = dict(puppiAlphaSlopesPhotons = [6.0,6.0,8.5]))
+       _variant("HGCAlphaSlopeNe2p0a3p0", hgcal = dict(puppiAlphaSlopes = [2.0,2.0,3.0]))
+       _variant("HGCAlphaSlopeNe3p0a4p5", hgcal = dict(puppiAlphaSlopes = [3.0,3.0,4.5]))
+       _variant("HGCAlphaSlopeNe6p0a8p5", hgcal = dict(puppiAlphaSlopes = [6.0,6.0,8.5]))
+
+    if True:
+       _variant("HGCPriorPhUp", hgcal = dict(puppiPriorsPhotons = [7.0,7.0,14.0]))
+       _variant("HGCPriorNeUp", hgcal = dict(puppiPriors = [10.0,10.0,14.0]))
+
+       _variant("HGCPriorPh1p5a5p0", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0]))
+       _variant("HGCPriorPh0p0a3p5", hgcal = dict(puppiPriorsPhotons = [0.0,0.0,3.5]))
+       _variant("HGCPriorPhm1p5a0p0", hgcal = dict(puppiPriorsPhotons = [-1.5,-1.5,0.0]))
+
+       _variant("HGCPriorNe2p5a6p0", hgcal = dict(puppiPriors = [2.5,2.5,6.0]))
+       _variant("HGCPriorNe0p0a4p5", hgcal = dict(puppiPriors = [0.0,0.0,4.5]))
+       _variant("HGCPriorNem2p5a3p5", hgcal = dict(puppiPriors = [-2.5,-2.5,3.5]))
+
+    if True:
+       _variant("HGCPriorPhNePtSlopePh1Ne", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPriors = [2.5,2.5,6.0],puppiPtSlopesPhotons = [0.40,0.40,0.40],puppiPtSlopes = [0.40,0.40,0.35]))
+       _variant("HGCPriorPhNePtSlopePh2Ne", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPriors = [2.5,2.5,6.0],puppiPtSlopesPhotons = [0.60,0.60,0.60],puppiPtSlopes = [0.40,0.40,0.35]))
+       _variant("HGCPriorPhPtSlopePh1Ne", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.40,0.40,0.40],puppiPtSlopes = [0.40,0.40,0.35]))
+       _variant("HGCPriorPhPtSlopePh2Ne", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.60,0.60,0.60],puppiPtSlopes = [0.40,0.40,0.35]))
+       _variant("HGCPriorPhNePtSlopePh1", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPriors = [2.5,2.5,6.0],puppiPtSlopesPhotons = [0.40,0.40,0.40]))
+       _variant("HGCPriorPhNePtSlopePh2", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPriors = [2.5,2.5,6.0],puppiPtSlopesPhotons = [0.60,0.60,0.60]))
+       _variant("HGCPriorPhPtSlopePh1", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.40,0.40,0.40]))
+       _variant("HGCPriorPhPtSlopePh2", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.60,0.60,0.60]))
