@@ -273,6 +273,105 @@ whats = [
         ("Corr",    "L1HGCal$",      ROOT.kAzure+1,   20, 1.3),
         ("CorrEM",  "L1HGCalEM$",    ROOT.kViolet+1,  20, 0.9),
     ]),
+
+    ('debug-hgcTMVA',[ #TMVA debugging
+        ("HGCalNoID",          "L1HGCalNoID$",               ROOT.kGreen+0,  21, 1.2),
+        ("HGCalOldTrainOldID", "L1HGCalWithPUPionOldOldID$", ROOT.kBlack,    20, 1.2),
+        ("HGCalNewTrainOldID", "L1HGCalWithPUPionNewOldID$", ROOT.kRed-4,    20, 1.2),
+        ("HGCalNewTrainNewID", "L1HGCalWithPUPionNewID$",    ROOT.kViolet-4, 20, 1.2),
+    ]),
+    ('pfdebugTMVA',[ #TMVA debugging
+        ("Gen #times Acc",  "GenAcc$",                 ROOT.kGray+1,   21, 1.2),
+        ("PFNoID",          "L1PFNoID$",               ROOT.kGreen+0,  21, 1.2),
+        ("PFOldTrainOldID", "L1PFWithPUPionOldOldID$", ROOT.kBlack,    20, 1.2),
+        ("PFNewTrainOldID", "L1PFWithPUPionNewOldID$", ROOT.kRed-4,    20, 1.2),
+        ("PFNewTrainNewID", "L1PFWithPUPionNewID$",    ROOT.kViolet-4, 20, 1.2),
+    ]),
+    ('puppidebugTMVA',[ #TMVA debugging
+        ("Gen #times Acc",     "GenAcc$",                    ROOT.kGray+1,   21, 1.2),
+        ("PuppiNoID",          "L1PuppiNoID$",               ROOT.kGreen+0,  21, 1.2),
+        ("PuppiOldTrainOldID", "L1PuppiWithPUPionOldOldID$", ROOT.kBlack,    20, 1.2),
+        ("PuppiNewTrainOldID", "L1PuppiWithPUPionNewOldID$", ROOT.kRed-4,    20, 1.2),
+        ("PuppiNewTrainNewID", "L1PuppiWithPUPionNewID$",    ROOT.kViolet-4, 20, 1.2),
+    ]),
+    ('debug-pfpuppiTMVA-OldOld',[ #TMVA debugging
+        ("Gen #times Acc",     "GenAcc$",                    ROOT.kGray+1,   21, 1.2),
+        ("PFOldTrainOldID",    "L1PFWithPUPionOldOldID$",    ROOT.kBlack,    20, 1.2),
+        ("PuppiOldTrainOldID", "L1PuppiWithPUPionOldOldID$", ROOT.kBlack,    20, 1.2),
+    ]),
+    ('debug-pfpuppiTMVA-NewOld',[ #TMVA debugging
+        ("Gen #times Acc",     "GenAcc$",                    ROOT.kGray+1,   21, 1.2),
+        ("PFNewTrainOldID",    "L1PFWithPUPionNewOldID$",    ROOT.kBlack,    20, 1.2),
+        ("PuppiNewTrainOldID", "L1PuppiWithPUPionNewOldID$", ROOT.kBlack,    20, 1.2),
+    ]),
+    ('debug-pfpuppiTMVA-New',[ #TMVA debugging
+        ("Gen #times Acc",     "GenAcc$",                 ROOT.kGray+1,   21, 1.2),
+        ("PFNewTrainNewID",    "L1PFWithPUPionNewID$",    ROOT.kBlack,    20, 1.2),
+        ("PuppiNewTrainNewID", "L1PuppiWithPUPionNewID$", ROOT.kBlack,    20, 1.2),
+    ]),
+
+    ('pfdebugTMVA-WPPU',[ #TMVA debugging
+        ("Gen #times Acc",       "GenAcc$",              ROOT.kGray+1,   21, 1.2),
+        ("PFNoID",               "L1PFNoID$",            ROOT.kGreen+0,  21, 1.2),
+        ("PFNewTrainNewID-0.03", "L1PFWithPUNewIDm0p3$", ROOT.kRed-4,    20, 1.2),
+        ("PFNewTrainNewID-0.02", "L1PFWithPUNewIDm0p2$", ROOT.kRed+2,    20, 1.2),
+        ("PFNewTrainNewID-0.01", "L1PFWithPUNewIDm0p1$", ROOT.kBlack,    20, 1.2),
+        ("PFNewTrainNewID0.00",  "L1PFWithPUNewID0p0$",  ROOT.kOrange,   20, 1.2),
+        ("PFNewTrainNewID0.01",  "L1PFWithPUNewID0p1$",  ROOT.kViolet-4, 20, 1.2),
+        ("PFNewTrainNewID0.02",  "L1PFWithPUNewID0p2$",  ROOT.kBlue,     20, 1.2),
+        ("PFNewTrainNewID0.03",  "L1PFWithPUNewID0p3$",  ROOT.kCyan,     20, 1.2),
+        #("PFNewTrainOldID-0.01", "L1PFWithPUNewOldIDm0p01$", ROOT.kViolet+2,    20, 1.2),
+    ]),
+    ('puppidebugTMVA-WPPU',[ #TMVA debugging
+        ("Gen #times Acc",          "GenAcc$",                 ROOT.kGray+1,   21, 1.2),
+        ("PuppiNoID",               "L1PuppiNoID$",            ROOT.kGreen+0,  21, 1.2),
+        ("PuppiNewTrainNewID-0.03", "L1PuppiWithPUNewIDm0p3$", ROOT.kRed-4,    20, 1.2),
+        ("PuppiNewTrainNewID-0.02", "L1PuppiWithPUNewIDm0p2$", ROOT.kRed+2,    20, 1.2),
+        ("PuppiNewTrainNewID-0.01", "L1PuppiWithPUNewIDm0p1$", ROOT.kBlack,    20, 1.2),
+        ("PuppiNewTrainNewID0.00",  "L1PuppiWithPUNewID0p0$",  ROOT.kOrange,   20, 1.2),
+        ("PuppiNewTrainNewID0.01",  "L1PuppiWithPUNewID0p1$",  ROOT.kViolet-4, 20, 1.2),
+        ("PuppiNewTrainNewID0.02",  "L1PuppiWithPUNewID0p2$",  ROOT.kBlue,     20, 1.2),
+        ("PuppiNewTrainNewID0.03",  "L1PuppiWithPUNewID0p3$",  ROOT.kCyan,     20, 1.2),
+        #("PFNewTrainOldID-0.01", "L1PFWithPUNewOldIDm0p01$", ROOT.kViolet+2,    20, 1.2),
+    ]),
+
+    ('puppiTunePtSlope',[
+        ("Before",             "L1Puppi$",                     ROOT.kGray+1,   21, 1.0),
+        ("NoTuning",           "L1PuppiWithPUPionID$",         ROOT.kBlack,    20, 1.2),
+        #("PtSlopePhDown",     "L1TuneHGCPtSlopePhDown$",      ROOT.kRed+2,    20, 1.2),
+        #("PtSlopeNeDown",     "L1TuneHGCPtSlopeNeDown$",      ROOT.kBlue+2,   20, 1.2),
+        ("PtSlopePh0.4",       "L1TuneHGCPtSlopePh0p4$",       ROOT.kOrange+1, 20, 1.2),
+        ("PtSlopePh0.6",       "L1TuneHGCPtSlopePh0p6$",       ROOT.kOrange+4, 20, 1.2),
+        ("PtSlopePh0.9",       "L1TuneHGCPtSlopePh0p9$",       ROOT.kOrange+7, 20, 1.2),
+        ("PtSlopeNe0.4_0.35",  "L1TuneHGCPtSlopeNe0p4a0p35$",  ROOT.kViolet+1, 20, 1.2),
+        ("PtSlopeNe0.6_0.4",   "L1TuneHGCPtSlopeNe0p610p4$",   ROOT.kViolet+4, 20, 1.2),
+        ("PtSlopeNe0.9_0.5",   "L1TuneHGCPtSlopeNe0p9a0p5$",   ROOT.kViolet+7, 20, 1.2),
+    ]),
+    ('puppiTunePrior',[
+        ("Before",           "L1Puppi$",                    ROOT.kGray+1,   21, 1.0),
+        ("NoTuning",         "L1PuppiWithPUPionID$",        ROOT.kBlack,    20, 1.2),
+        #("PriorPhUp",       "L1TuneHGCPriorPhUp$",         ROOT.kRed+2,    20, 1.2),
+        #("PriorNeUp",       "L1TuneHGCPriorNeUp$",         ROOT.kBlue+2,   20, 1.2),
+        ("PriorPh1.5_5.0",   "L1TuneHGCPriorPh1p5a5p0$",    ROOT.kOrange+1, 20, 1.2),
+        ("PriorPh0.0_3.5",   "L1TuneHGCPriorPh0p0a3p5$",        ROOT.kOrange+4, 20, 1.2),
+        ("PriorPh-1.5_0.0",  "L1TuneHGCPriorPhm1p5a0p0$",  ROOT.kOrange+7, 20, 1.2),
+        ("PriorNe2.5_6.0",   "L1TuneHGCPriorNe2p5a6p0$",    ROOT.kViolet+1, 20, 1.2),
+        ("PriorNe0.0_4.5",   "L1TuneHGCPriorNe0p0a4p5$",        ROOT.kViolet+4, 20, 1.2),
+        ("PriorNe-2.5_3.5",  "L1TuneHGCPriorNem2p5a3p5$",  ROOT.kViolet+7, 20, 1.2),
+    ]),
+    ('puppiTuneFinal',[
+        ("Before",          "L1Puppi$",                         ROOT.kGray+1,   21, 1.0),
+        ("NoTuning",        "L1PuppiWithPUPionID$",             ROOT.kBlack,    20, 1.2),
+        #("PrPhNePtSlPh1Ne", "L1TuneHGCPriorPhNePtSlopePh1Ne$",  ROOT.kOrange+1, 20, 1.2),
+        #("PrPhNePtSlPh2Ne", "L1TuneHGCPriorPhNePtSlopePh2Ne$",  ROOT.kOrange+4, 20, 1.2),
+        #("PrPhPtSlPh1Ne",   "L1TuneHGCPriorPhPtSlopePh1Ne$",    ROOT.kOrange+7, 20, 1.2),
+        #("PrPhPtSlPh2Ne",   "L1TuneHGCPriorPhPtSlopePh2Ne$",    ROOT.kRed, 20, 1.2),
+        #("PrPhNePtSlPh1",   "L1TuneHGCPriorPhNePtSlopePh1$",    ROOT.kRed+2, 20, 1.2),
+        #("PrPhNePtSlPh2",   "L1TuneHGCPriorPhNePtSlopePh2$",    ROOT.kViolet+1, 20, 1.2),
+        ("PrPhPtSlPh1",     "L1TuneHGCPriorPhPtSlopePh1$",      ROOT.kViolet+4, 20, 1.2),
+        #("PrPhPtSlPh2",     "L1TuneHGCPriorPhPtSlopePh2$",      ROOT.kViolet+7, 20, 1.2),
+    ]),
+
     ('l1pfold',[
         ("Gen #times Acc",        "GenAcc$",    ROOT.kGray+1,  20, 1.2),
         ("Raw Ecal",   "L1OldRawEcal$", ROOT.kGreen+3,  21, 1.7),
@@ -469,7 +568,8 @@ if __name__ == "__main__":
                 for minPt2 in (50, 75, 100):
                     sels.append(("%s_pt_%02d_inf" % (particle, minPt2), "mc_pt > %g && %s" % (minPt2, pdgIdCut)))
         if "null" in particle: continue; # not point in profiling random cones vs pt
-        etas = [ (0.0,1.3), (1.3,1.7), (1.7,2.5), (2.5,3.0), (3.0,5.0) ]
+        #etas = [ (0.0,1.3), (1.3,1.7), (1.7,2.5), (2.5,3.0), (3.0,5.0) ]
+        etas = [ (0.0,1.5), (1.5,2.5), (2.5,3.0), (3.0,5.0) ]
         if options.eta: etas = [ options.eta ]
         for etamin, etamax in etas:
             if options.noPtPlot: break
@@ -628,7 +728,7 @@ if __name__ == "__main__":
                         frame.GetXaxis().SetTitle(options.xpt[1]+" (GeV)")
                         legsize = 0.042*(len(plots)+0.5)
                         if not hasfitlegend: legsize /= 2;
-                        leg = ROOT.TLegend(0.4,0.93,0.95,0.93-legsize)
+                        leg = ROOT.TLegend(0.18,0.93,0.95,0.93-legsize)
                         leg.SetTextSize(0.035);
                         leg.SetNColumns(2)
                     frame.GetYaxis().SetDecimals(True)
