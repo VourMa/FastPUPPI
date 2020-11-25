@@ -1,0 +1,29 @@
+executable      = $ENV(CMSSW_BASE)/src/FastPUPPI/NtupleProducer/python/scripts/condor/runOnCondor.sh
+output          = $ENV(CMSSW_BASE)/src/FastPUPPI/NtupleProducer/python/scripts/condor/job.$(ClusterId).$(ProcId).out
+error           = $ENV(CMSSW_BASE)/src/FastPUPPI/NtupleProducer/python/scripts/condor/job.$(ClusterId).$(ProcId).err
+log             = $ENV(CMSSW_BASE)/src/FastPUPPI/NtupleProducer/python/scripts/condor/job.$(ClusterId).$(ProcId).log
+getenv = True
++JobFlavour    = "tomorrow"
+#+JobFlavour    = "workday"
+queue arguments from (
+#ntuplePU0 MultiPion_PT0to200
+#ntuplePU0 DoublePhoton_FlatPt-1To100
+#ntuplePU0 DoubleElectron_FlatPt-1To100 
+##########
+#ntuplePU200 SinglePion_PT0to200
+#ntuplePU200 DoublePhoton_FlatPt-1To100
+#ntuplePU200 DoubleElectron_FlatPt-1To100 
+##########
+#perfGunPU0 MultiPion_PT0to200
+#perfGunPU0 DoublePhoton_FlatPt-1To100
+#perfGunPU0 DoubleElectron_FlatPt-1To100
+##########
+#perfGunPU200 SinglePion_PT0to200
+#perfGunPU200 DoublePhoton_FlatPt-1To100
+#perfGunPU200 DoubleElectron_FlatPt-1To100
+##########
+perfPU200 TTbar
+perfPU200 SingleNeutrino
+#perfPU200 VBF_HToInvisible
+)
+
