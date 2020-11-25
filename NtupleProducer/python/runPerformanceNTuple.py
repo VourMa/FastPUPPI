@@ -651,9 +651,11 @@ def doDumpFile(basename="TTbar_PU200"):
 def selectGenParticles(particle):
     genSelection = getattr(process, 'genSelection', None)
     if particle == "photon":
-        genSelection.cut = "status() == 1 && abs(pdgId()) == 22 && isPromptFinalState()"
+        genSelection.cut = "abs(pdgId()) == 22 && isPromptFinalState()"
+    elif particle == "electron":
+        genSelection.cut = "abs(pdgId()) == 11 && isPromptFinalState()"
     elif particle == "pion":
-        genSelection.cut = "status() == 1 && abs(pdgId()) == 211 && isPromptFinalState()"
+        genSelection.cut = "abs(pdgId()) == 211 && isPromptFinalState()"
     else: pass
 
 def applyHGCalID(nameID, applyPU, variablesPU, weightsPU, WPPU, applyPion, variablesPion, weightsPion, WPPion):
@@ -765,14 +767,24 @@ def goSelectHGCClusters():
     trainDir = "/eos/user/e/evourlio/SWAN_projects/PF_L1_11_1_X_GeomTune/TrainFolders/"
     # New Train, New variables
     variablesPU_New = cms.VPSet(
-        cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
         cms.PSet(name = cms.string("eMaxOverE"), value = cms.string("eMax()/energy()")),
-        cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
         cms.PSet(name = cms.string("sigmaRRTot"), value = cms.string("sigmaRRMean()")),
-        cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
+        cms.PSet(name = cms.string("zBarycenter"), value = cms.string("zBarycenter()")),
+        cms.PSet(name = cms.string("layer90percent"), value = cms.string("layer90percent()")),
+        cms.PSet(name = cms.string("triggerCells67percent"), value = cms.string("triggerCells67percent()")),
     )
-    weightsPU_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_111X_5var/weights/TMVA_BDT.weights.xml"
-    WPPU_New = "-0.03"
+    weightsPU_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_110X_v1_5var/weights/TMVA_BDT.weights.xml"
+    WPPU_New = "-0.01"
+
+    variablesPU_NewEta = cms.VPSet(
+        cms.PSet(name = cms.string("fabs(eta)"), value = cms.string("abs(eta())")),
+        cms.PSet(name = cms.string("eMaxOverE"), value = cms.string("eMax()/energy()")),
+        cms.PSet(name = cms.string("sigmaRRTot"), value = cms.string("sigmaRRMean()")),
+        cms.PSet(name = cms.string("zBarycenter"), value = cms.string("zBarycenter()")),
+        cms.PSet(name = cms.string("layer90percent"), value = cms.string("layer90percent()")),
+        cms.PSet(name = cms.string("triggerCells67percent"), value = cms.string("triggerCells67percent()")),
+    )
+    weightsPU_NewEta = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_110X_v1_5varEta/weights/TMVA_BDT.weights.xml"
 
     variablesPion_New = cms.VPSet(
         cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
@@ -781,7 +793,7 @@ def goSelectHGCClusters():
         cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
         cms.PSet(name = cms.string("coreShowerLength"), value = cms.string("coreShowerLength()")),
     )
-    weightsPion_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_111X_5var/weights/TMVA_BDT.weights.xml"
+    weightsPion_New = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_110X_v1_5var/weights/TMVA_BDT.weights.xml"
     WPPion_New = "0.04"
 
     # New Train, Old variables
@@ -791,8 +803,9 @@ def goSelectHGCClusters():
         cms.PSet(name = cms.string("maxLayer"), value = cms.string("maxLayer()")),
         cms.PSet(name = cms.string("sigmaPhiPhiTot"), value = cms.string("sigmaPhiPhiTot()")),
     )
-    weightsPU_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_111X_PrevIDvar/weights/TMVA_BDT.weights.xml"
-    WPPU_NewOld = "-0.03"
+    #weightsPU_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_110X_v1_PrevIDvar/weights/TMVA_BDT.weights.xml"
+    weightsPU_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_SinglePion_PT0to200_PU200_vs_PU_110X_v1_PreviousVar/weights/TMVA_BDT.weights.xml"
+    WPPU_NewOld = "-0.04"
 
     variablesPion_Old = cms.VPSet(
         cms.PSet(name = cms.string("fabs(eta)"), value = cms.string("abs(eta())")),
@@ -801,7 +814,7 @@ def goSelectHGCClusters():
         cms.PSet(name = cms.string("hOverE"), value = cms.string("hOverE()")),
         cms.PSet(name = cms.string("sigmaZZ"), value = cms.string("sigmaZZ()")),
     )
-    weightsPion_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_111X_PrevIDvar/weights/TMVA_BDT.weights.xml"
+    weightsPion_NewOld = trainDir+"Train_DoublePhoton_FlatPt-1To100_PU200_vs_SinglePion_PT0to200_PU200_110X_v1_PrevIDvar/weights/TMVA_BDT.weights.xml"
     WPPion_NewOld = "0.02"
 
     # Old Train, Old variables
@@ -812,19 +825,27 @@ def goSelectHGCClusters():
     WPPion_OldOld = "0.01"
 
     # Application
-    applyHGCalID("NoID", False, variablesPU_New, weightsPU_New, WPPU_New, False, variablesPion_New, weightsPion_New, WPPion_New)
+    applyHGCalID("NoID", False, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
 
-    applyHGCalID("WithPUNewID", True, variablesPU_New, weightsPU_New, WPPU_New, False, variablesPion_New, weightsPion_New, WPPion_New)
-    applyHGCalID("WithPionNewID", False, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
-    applyHGCalID("WithPUPionNewID", True, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
+    if False:
+        applyHGCalID("WithPUNewID", True, variablesPU_New, weightsPU_New, WPPU_New, False, variablesPion_New, weightsPion_New, WPPion_New)
+        applyHGCalID("WithPionNewID", False, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
+        applyHGCalID("WithPUPionNewID", True, variablesPU_New, weightsPU_New, WPPU_New, True, variablesPion_New, weightsPion_New, WPPion_New)
 
-    applyHGCalID("WithPUNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, False, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
-    applyHGCalID("WithPionNewOldID", False, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
-    applyHGCalID("WithPUPionNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+        applyHGCalID("WithPUNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, False, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+        applyHGCalID("WithPionNewOldID", False, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
+        applyHGCalID("WithPUPionNewOldID", True, variablesPU_Old, weightsPU_NewOld, WPPU_NewOld, True, variablesPion_Old, weightsPion_NewOld, WPPion_NewOld)
 
-    applyHGCalID("WithPUOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
-    applyHGCalID("WithPionOldOldID", False, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
-    applyHGCalID("WithPUPionOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+        applyHGCalID("WithPUOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+        applyHGCalID("WithPionOldOldID", False, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+        applyHGCalID("WithPUPionOldOldID", True, variablesPU_Old, weightsPU_OldOld, WPPU_OldOld, True, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+
+    if True:
+        for WPPU in ["0.3", "0.2", "0.1", "0.0", "-0.1", "-0.2", "-0.3"]:
+            WPPUstr = WPPU.replace(".","p").replace("-","m")
+            #applyHGCalID("WithPUNewID"+WPPUstr, True, variablesPU_New, weightsPU_New, WPPU, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+            #applyHGCalID("WithPUNewID"+WPPUstr, True, variablesPU_Old, weightsPU_NewOld, WPPU, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
+            applyHGCalID("WithPUNewID"+WPPUstr, True, variablesPU_NewEta, weightsPU_NewEta, WPPU, False, variablesPion_Old, weightsPion_OldOld, WPPion_OldOld)
 
 def addTunePFHGCalSel():
     def _variant(label, common = {}, barrel = {}, hgcal = {}, hf = {}):
@@ -891,3 +912,5 @@ def addTunePFHGCalSel():
        _variant("HGCPriorPhNePtSlopePh2", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPriors = [2.5,2.5,6.0],puppiPtSlopesPhotons = [0.60,0.60,0.60]))
        _variant("HGCPriorPhPtSlopePh1", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.40,0.40,0.40]))
        _variant("HGCPriorPhPtSlopePh2", hgcal = dict(puppiPriorsPhotons = [1.5,1.5,5.0],puppiPtSlopesPhotons = [0.60,0.60,0.60]))
+
+goRegional();goSelectHGCClusters()
